@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Route } from "react-router-dom";
 import ReactDOM from "react-dom/client";
 import "./index.scss";
 import "macro-css";
@@ -7,9 +7,9 @@ import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <Router>
+  <>
+    <Route>
       <App />
-    </Router>
-  </React.StrictMode>
+    </Route>
+  </>
 );

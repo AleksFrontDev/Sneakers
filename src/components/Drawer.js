@@ -1,6 +1,8 @@
 import React from "react";
 
 const Drawer = ({ onClose, onRemove, items = [] }) => {
+  console.log("drawer items", { items });
+
   return (
     <div className="drawer d-flex flex-column">
       <h2 className="mb-10 d-flex justify-between">
