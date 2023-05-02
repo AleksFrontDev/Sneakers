@@ -12,41 +12,54 @@ const App = () => {
   const [favorites, setFavorite] = React.useState([]);
   const [searchValue, setSearchValue] = React.useState("");
   const [cartOpened, setCartOpened] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   console.log("app cart items", cartItems);
 
   React.useEffect(() => {
-    axios
-      .get(`https://6441a16afadc69b8e08889f4.mockapi.io/items`) // получение просто item
-      .then(function (res) {
-        setItems(res.data);
-      });
+    async function fetchData() {
+      setIsLoading(true);
+      const itemsResponse = await axios.get(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/items`
+      ); // получение просто item
 
-    axios
-      .get(`https://6441a16afadc69b8e08889f4.mockapi.io/cart`) // получение item для корзины
-      .then((res) => {
-        setCartItems(res.data);
-      });
-    axios
-      .get(`https://6441a16afadc69b8e08889f4.mockapi.io/favorite`) // получение просто item
-      .then((res) => {
-        setFavorite(res.data);
-      });
+      const cartResponse = await axios.get(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/cart`
+      ); // получение item для корзины
+
+      const favoritesResponse = await axios.get(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/favorite`
+      ); // получение просто item
+      setIsLoading(false);
+      setCartItems(cartResponse.data);
+      setFavorite(favoritesResponse.data);
+      setItems(itemsResponse.data);
+    }
+    fetchData();
   }, []);
   const onAddToCart = (obj) => {
-    const request = axios.post(
-      `https://6441a16afadc69b8e08889f4.mockapi.io/cart`,
-      obj
-    ); //Тут запрос для сохранения данных из корзины в BackEnd(вместо "get" написали "post")
-    // Add temporarirly to app state without ID to make the app feel faster
-    setCartItems((prev) => [...prev, obj]);
-    request.then((response) => {
-      if (response.data != null && response.data.id != null) {
-        obj.id = response.data.id;
-        // Setting state to previous value because we already updated the object ref
-        setCartItems((prev) => prev);
-      }
-    });
+    if (cartItems.find((item) => Number(item.id) === Number(obj.id))) {
+      axios.delete(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/cart/${obj.id}`
+      );
+      setCartItems((prev) =>
+        prev.filter((item) => Number(item.id) !== Number(obj.id))
+      );
+    } else {
+      const request = axios.post(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/cart`,
+        obj
+      ); //Тут запрос для сохранения данных из корзины в BackEnd(вместо "get" написали "post")
+      // Add temporarirly to app state without ID to make the app feel faster
+      setCartItems((prev) => [...prev, obj]);
+      request.then((response) => {
+        if (response.data != null && response.data.id != null) {
+          obj.id = response.data.id;
+          // Setting state to previous value because we already updated the object ref
+          setCartItems((prev) => prev);
+        }
+      });
+    }
   };
   const onRemoveItem = (id) => {
     axios.delete(`https://6441a16afadc69b8e08889f4.mockapi.io/cart/${id}`);
@@ -90,10 +103,12 @@ const App = () => {
             <Home
               items={items}
               searchValue={searchValue}
+              cartItems={cartItems}
               setSearchValue={setSearchValue}
               onChangeSearchInput={onChangeSearchInput}
               onAddFavorite={onAddFavorite}
               onAddToCart={onAddToCart}
+              isLoading={isLoading}
             />
           }
           exact
