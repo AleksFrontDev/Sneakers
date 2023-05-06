@@ -1,10 +1,41 @@
 import React from "react";
+import Info from "./info";
+import AppContext from "../context";
+import axios from "axios";
+
+const delay = () => new Promise((resolve) => setTimeout(resolve, 1000));
 
 const Drawer = ({ onClose, onRemove, items = [] }) => {
-  console.log("drawer items", { items });
+  const { cartItems, setCartItems } = React.useContext(AppContext);
+  const [orderId, setOrderId] = React.useState(null);
+  const [isOrderComplete, setIsOrderComplete] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const onClickOrder = async () => {
+    try {
+      setIsLoading(true);
+      const { data } = await axios.post(
+        `https://6441a16afadc69b8e08889f4.mockapi.io/orders`,
+        { items: cartItems }
+      );
+      setOrderId(data.id);
+      setIsOrderComplete(true);
+      setCartItems([]);
+      for (let i = 0; i < cartItems.length; i++) {
+        const item = cartItems[i];
+        await axios.delete(
+          `https://6441a16afadc69b8e08889f4.mockapi.io/cart` + item.id
+        );
+        await delay(1000);
+      }
+    } catch (error) {
+      console.log("Не удалось создать заказ :(");
+    }
+    setIsLoading(false);
+  };
 
   return (
-    <div className="drawer d-flex flex-column">
+    <div className="drawer d-flex flex-column flex">
       <h2 className="mb-10 d-flex justify-between">
         Корзина
         <img
@@ -40,41 +71,36 @@ const Drawer = ({ onClose, onRemove, items = [] }) => {
               </div>
             ))}
           </div>
+
+          <div className="cartTotalBlock">
+            <ul>
+              <li>
+                <span>Итого:</span>
+                <div></div>
+                <b>21 498 руб.</b>
+              </li>
+              <li>
+                <span>Налог 5%:</span>
+                <div></div>
+                <b>1074 руб.</b>
+              </li>
+            </ul>
+            <button disabled={isLoading} onClick={onClickOrder}>
+              Оформить заказ
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="cartEmpty d-flex align-center justify-center flex-column flex">
-          <img
-            className="mb-20"
-            width={120}
-            height={120}
-            src="/img/emptyBox.png"
-            alt="EmptyCart"
-          />
-          <h2>Корзина пустая</h2>
-          <p className="opacity-6">
-            Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ.
-          </p>
-          <button onClick={onClose} className="greenButton">
-            Вернуться назад
-          </button>
-        </div>
+        <Info
+          title={isOrderComplete ? "Заказ оформлен" : "Корзина пустая"}
+          description={
+            isOrderComplete
+              ? `Ваш заказ #${orderId} скоро будет передан курьерской доставке`
+              : "Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ."
+          }
+          image={isOrderComplete ? "/img/acsessOrder.png" : "/img/emptyBox.png"}
+        />
       )}
-
-      <div className="cartTotalBlock">
-        <ul>
-          <li>
-            <span>Итого:</span>
-            <div></div>
-            <b>21 498 руб.</b>
-          </li>
-          <li>
-            <span>Налог 5%:</span>
-            <div></div>
-            <b>1074 руб.</b>
-          </li>
-        </ul>
-        <button>Оформить заказ</button>
-      </div>
     </div>
   );
 };

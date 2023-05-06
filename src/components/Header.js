@@ -25,7 +25,7 @@ const Header = (props) => {
             <img width={20} height={20} src="/img/cart.png" alt="Корзина" />
             <span> 1205 руб.</span>
           </li>
-          <li>
+          <li className="mr-20 cu-p">
             <Link to="/favorites">
               <img
                 className="mr-15 cu-p"
