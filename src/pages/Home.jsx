@@ -7,7 +7,7 @@ function Home({
   searchValue,
   setSearchValue,
   onChangeSearchInput,
-  onAddToFavorite,
+  onAddFavorite,
   onAddToCart,
   isLoading,
 }) {
@@ -15,10 +15,10 @@ function Home({
     const filtredItems = items.filter((item) =>
       item.title.toLowerCase().includes(searchValue.toLowerCase())
     );
-    return (isLoading ? [...Array(8)] : filtredItems).map((item, index) => (
+    return (isLoading ? [...Array(12)] : filtredItems).map((item, index) => (
       <Card
         key={index}
-        onFavorite={(obj) => onAddToFavorite(obj)}
+        onFavorite={(obj) => onAddFavorite(obj)}
         onPlus={(obj) => onAddToCart(obj)}
         loading={isLoading}
         {...item}
