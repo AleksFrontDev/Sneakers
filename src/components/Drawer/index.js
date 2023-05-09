@@ -1,5 +1,5 @@
 import React from "react";
-import Info from "../info";
+import Info from "../Info";
 import { useCart } from "../../hooks/useCart";
 import axios from "axios";
 import styles from "./Drawer.module.scss";
