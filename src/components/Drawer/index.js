@@ -82,7 +82,7 @@ const Drawer = ({ onClose, onRemove, items = [], opened }) => {
                 <li>
                   <span>Итого:</span>
                   <div></div>
-                  <b>{totalPrice} руб.</b>
+                  <b>{totalPrice.length} руб.</b>
                 </li>
                 <li>
                   <span>Налог 5%:</span>
