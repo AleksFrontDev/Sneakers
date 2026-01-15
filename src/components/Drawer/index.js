@@ -1,10 +1,7 @@
 import React from "react";
 import Info from "../Info";
 import { useCart } from "../../hooks/useCart";
-import axios from "axios";
 import styles from "./Drawer.module.scss";
-
-const delay = () => new Promise((resolve) => setTimeout(resolve, 1000));
 
 const Drawer = ({ onClose, onRemove, items = [], opened }) => {
   const { cartItems, setCartItems, totalPrice } = useCart();
@@ -15,27 +12,34 @@ const Drawer = ({ onClose, onRemove, items = [], opened }) => {
   const onClickOrder = async () => {
     try {
       setIsLoading(true);
-      const { data } = await axios.post(
-        `https://6441a16afadc69b8e08889f4.mockapi.io/orders`,
-        {
-          items: cartItems,
-        }
-      );
-      setOrderId(data.id);
+
+      const newOrder = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        items: cartItems,
+        total: totalPrice
+      };
+
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+
+      const updatedOrders = [...existingOrders, newOrder];
+
+      localStorage.setItem('orders', JSON.stringify(updatedOrders));
+
+      setOrderId(newOrder.id);
       setIsOrderComplete(true);
       setCartItems([]);
 
-      for (let i = 0; i < cartItems.length; i++) {
-        const item = cartItems[i];
-        await axios.delete(
-          `https://6441a16afadc69b8e08889f4.mockapi.io/cart` + item.id
-        );
-        await delay(1000);
-      }
+      localStorage.setItem('cart', JSON.stringify([]));
+
+      console.log("Заказ успешно создан:", newOrder);
+
     } catch (error) {
-      console.log("Ошибка при создании заказа :(");
+      console.error("Ошибка при создании заказа:", error);
+      alert("Произошла ошибка при оформлении заказа. Попробуйте еще раз.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -52,6 +56,7 @@ const Drawer = ({ onClose, onRemove, items = [], opened }) => {
             alt="close"
           />
         </h2>
+
         {items.length > 0 ? (
           <div>
             <div className="items">
@@ -87,20 +92,24 @@ const Drawer = ({ onClose, onRemove, items = [], opened }) => {
                 <li>
                   <span>Налог 5%:</span>
                   <div></div>
-                  <b>{Math.round((totalPrice / 100) * 5)}руб.</b>
+                  <b>{Math.round((totalPrice / 100) * 5)} руб.</b>
                 </li>
               </ul>
-              <button disabled={isLoading} onClick={onClickOrder}>
-                Оформить заказ
+              <button
+                disabled={isLoading}
+                onClick={onClickOrder}
+                className={styles.orderButton}
+              >
+                {isLoading ? "Оформление..." : "Оформить заказ"}
               </button>
             </div>
           </div>
         ) : (
           <Info
-            title={isOrderComplete ? "Заказ оформлен" : "Корзина пустая"}
+            title={isOrderComplete ? "Заказ оформлен!" : "Корзина пустая"}
             description={
               isOrderComplete
-                ? `Ваш заказ #${orderId} скоро будет передан курьерской доставке`
+                ? `Ваш заказ #${orderId} успешно оформлен!`
                 : "Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ."
             }
             image={

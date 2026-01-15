@@ -1,85 +1,76 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
-import axios from "axios";
-import Header from "./components/Header";
-import Drawer from "./components/Drawer";
-import Home from "./pages/Home";
-import AppContext from "./context";
-import Favorites from "./pages/Favorites";
-import Orders from "./pages/Orders";
+import { Route, Routes } from 'react-router-dom';
+import Header from './components/Header';
+import Drawer from './components/Drawer';
+import Home from './pages/Home';
+import AppContext from './context';
+import Favorites from './pages/Favorites';
+import Orders from './pages/Orders';
+
+import { itemsData } from './data/items';
 
 const App = () => {
   const [items, setItems] = React.useState([]);
   const [cartItems, setCartItems] = React.useState([]);
   const [favorites, setFavorite] = React.useState([]);
-  const [searchValue, setSearchValue] = React.useState("");
+  const [searchValue, setSearchValue] = React.useState('');
   const [cartOpened, setCartOpened] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const [itemsResponse, cartResponse, favoritesResponse] =
-          await Promise.all([
-            axios.get(`https://6441a16afadc69b8e08889f4.mockapi.io/items`),
-            axios.get(`https://6441a16afadc69b8e08889f4.mockapi.io/cart`),
-            axios.get(`https://6441a16afadc69b8e08889f4.mockapi.io/favorite`),
-          ]);
+    setItems(itemsData);
 
-        setIsLoading(false);
-        setCartItems(cartResponse.data);
-        setFavorite(favoritesResponse.data);
-        setItems(itemsResponse.data);
-      } catch (error) {
-        alert("Ошибка при запросе данных :(");
-        console.error(error);
-      }
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
     }
-    fetchData();
+
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+      setFavorite(JSON.parse(savedFavorites));
+    }
+
+    setIsLoading(false);
   }, []);
-  const onAddToCart = async (obj) => {
+
+  React.useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  React.useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const onAddToCart = (obj) => {
     try {
       if (cartItems.find((item) => Number(item.id) === Number(obj.id))) {
         setCartItems((prev) =>
           prev.filter((item) => Number(item.id) !== Number(obj.id))
         );
-        await axios.delete(
-          `https://6441a16afadc69b8e08889f4.mockapi.io/cart/${obj.id}`
-        );
       } else {
         setCartItems((prev) => [...prev, obj]);
-        await axios.post(
-          `https://6441a16afadc69b8e08889f4.mockapi.io/cart`,
-          obj
-        ); //Тут запрос для сохранения данных из корзины в BackEnd(вместо "get" написали "post")
       }
     } catch (error) {
-      alert("Ошибка при добавлении в корзину");
+      alert('Ошибка при добавлении в корзину');
       console.error(error);
     }
   };
 
   const onRemoveItem = (id) => {
     try {
-      axios.delete(`https://6441a16afadc69b8e08889f4.mockapi.io/cart/${id}`);
       setCartItems((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
-      alert("Ошибка при удалении из корзины");
+      alert('Ошибка при удалении из корзины');
       console.error(error);
     }
   };
-  const onAddFavorite = async (obj) => {
+
+  const onAddFavorite = (obj) => {
     try {
       if (favorites.find((item) => item.id === obj.id)) {
-        axios.delete(
-          `https://6441a16afadc69b8e08889f4.mockapi.io/favorite/${obj.id}`
-        );
+        setFavorite((prev) => prev.filter((item) => item.id !== obj.id));
       } else {
-        const { data } = await axios.post(
-          `https://6441a16afadc69b8e08889f4.mockapi.io/favorite`,
-          obj
-        ); //Тут запрос для сохранения данных из корзины в BackEnd(вместо "get" написали "post")
-        setFavorite((prev) => [...prev, data]);
+        setFavorite((prev) => [...prev, obj]);
       }
     } catch (error) {
       alert(`Не удалось добавить в фавориты`);
@@ -94,6 +85,7 @@ const App = () => {
   const isItemAdded = (id) => {
     return cartItems.some((obj) => Number(obj.id) === Number(id));
   };
+
   return (
     <AppContext.Provider
       value={{

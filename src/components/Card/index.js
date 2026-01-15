@@ -13,6 +13,9 @@ const Card = ({
   favorite = false,
   loading = false,
 }) => {
+
+    console.log('Card props:', { id, title, imageUrl, price });
+
   const { isItemAdded } = React.useContext(AppContext);
   const [isFavorite, setIsFavorite] = React.useState(favorite);
   const onClickPlus = () => {
